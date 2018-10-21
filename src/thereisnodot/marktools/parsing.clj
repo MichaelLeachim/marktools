@@ -5,11 +5,31 @@
 ;; @ All rights reserved.                                                               @
 ;; @@@@@@ At 2018-10-21 22:30 <thereisnodotcollective@gmail.com> @@@@@@@@@@@@@@@@@@@@@@@@
 
-
-(ns wireframe.markdown.parsing
+(ns
+    {:doc "Metadata parsing namespace"
+     :author "Michael Leahcim"}
+    thereisnodot.marktools.parsing
   (:require
    [clj-time.format :as clj-time-format]
-   [wireframe.etc.utils :as utils]))
+   [thereisnodot.akronim.core :refer [defns]]))
+
+(defns slugify
+  "Will slugify given string. Will remove non ASCII characters"
+  [(slugify "Will slugify given string.") => "will-slugify-given-string"
+   (slugify "Это не работает") => ""
+   (slugify "whatever whoever" "_") => "whatever_whoever"]
+  ([some-text]
+   (slugify some-text "-"))
+  ([some-text split-kind]
+   (->>
+    some-text
+    (clojure.string/lower-case)
+    (re-seq  #"[A-Za-zА-Яа-я]+")
+    (clojure.string/join split-kind))))
+
+(defn- string-split
+  [split-by-regex coll]
+  (clojure.string/split coll split-by-regex))
 
 (defn- parse-list
   [field]
@@ -19,7 +39,7 @@
    (rest)
    (butlast)
    (apply str)
-   (utils/string-split #",")
+   (string-split #",")
    (map (comp clojure.string/lower-case clojure.string/trim))))
 
 (defn- parse-boolean
@@ -48,7 +68,7 @@
                 title-text
                 (throw (Exception. (str "Article: " filename " does not have :title field set"))))]
     {:title       title
-     :title-slug   (utils/slugify  title)
+     :title-slug   (slugify  title)
      :date date
      :date-text
      (clj-time-format/unparse human-readable-date-formatter date)
@@ -59,4 +79,3 @@
      :tags (if-let [tags-text (:tags metadata)]
              (into #{} (parse-list tags-text))
              [])}))
-

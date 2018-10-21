@@ -8,10 +8,18 @@
 ;; This is a markdown preprocessor engine. It takes markdown as input and extracts
 ;; all sorts of useful information from it.
 
-(ns thereisnodot.marktools.preprocessor
+(ns
+    ^{:doc "Preprocessing pipeline"
+      :author "Michael Leahcim"}
+    thereisnodot.marktools.preprocessor
   (:require [net.cgrand.enlive-html :as enlive]
-            [wireframe.routes :as routes]
-            [wireframe.markdown.render :as mr]))
+            [thereisnodot.marktools.render :as mr]))
+
+(defn path-for
+  [& params]
+  (throw (Exception.  (str "I am NOT IMPLEMENTED: " params))))
+
+
 
 (defn line-seq->text
   [lineseq]
@@ -94,7 +102,7 @@
     (fn [{{title :title} :attrs [path] :content}]
       [:div.video-view.mik-flush-center
        [:video.mik-cut-bottom {:controls true}
-        [:source {:src (routes/path-for :media :path path) :type "video/mp4"}]
+        [:source {:src (path-for :media :path path) :type "video/mp4"}]
         "You browser does not support the video tag"]
        [:h5.mik-flush-center.mik-cut-top  title]])
     line)])
@@ -106,7 +114,7 @@
    (html-transformer
     :path-for
     (fn [{[data-edn] :content}]
-      (apply routes/path-for (read-string (str "[" data-edn "]")))) line)])
+      (apply path-for (read-string (str "[" data-edn "]")))) line)])
 
 (defn- processor-image-transform
   [app-state line]
@@ -121,9 +129,9 @@
           [:attrs :src]
           (cond
             (and width src)
-            (routes/path-for :media-width :path src :width width)
+            (path-for :media-width :path src :width width)
             src
-            (routes/path-for :media :path src)))
+            (path-for :media :path src)))
          (assoc :tag :img)))) line)])
 
 (comment
@@ -144,7 +152,7 @@
          (fn [{[article] :content} ]
            (do
              (swap! link-gathering conj article)
-             [:a.interlink {:href (routes/path-for :article :title article)}
+             [:a.interlink {:href (path-for :article :title article)}
               (link-wrap article)])) line)]
     [(update  app-state :links-to concat @link-gathering)
      transformed-line]))
