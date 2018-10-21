@@ -1,6 +1,6 @@
-# thereisnodot
+# (WIP) Marktools
 
-A Clojure library designed to ... well, that part is up to you.
+A set of useful tools for markdown in Clojure programming language
 
 ## Usage
 
