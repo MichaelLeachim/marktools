@@ -36,6 +36,7 @@ require, a specific reducer.
 
 Let's look at a simple, heading incrementing reducer. 
 
+
 ```clojure
 
 (defns reducer:heading-incrementer
