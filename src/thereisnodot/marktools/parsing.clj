@@ -6,8 +6,8 @@
 ;; @@@@@@ At 2018-10-21 22:30 <thereisnodotcollective@gmail.com> @@@@@@@@@@@@@@@@@@@@@@@@
 
 (ns
-    {:doc "Metadata parsing namespace"
-     :author "Michael Leahcim"}
+    ^{:doc "Metadata parsing namespace"
+      :author "Michael Leahcim"}
     thereisnodot.marktools.parsing
   (:require
    [clj-time.format :as clj-time-format]
@@ -16,7 +16,6 @@
 (defns slugify
   "Will slugify given string. Will remove non ASCII characters"
   [(slugify "Will slugify given string.") => "will-slugify-given-string"
-   (slugify "Это не работает") => ""
    (slugify "whatever whoever" "_") => "whatever_whoever"]
   ([some-text]
    (slugify some-text "-"))

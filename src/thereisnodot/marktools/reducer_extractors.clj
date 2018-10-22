@@ -3,16 +3,11 @@
 ;; @ You can find additional information regarding licensing of this work in LICENSE.md @
 ;; @ You must not remove this notice, or any other, from this software.                 @
 ;; @ All rights reserved.                                                               @
-;; @@@@@@ At 2018-10-21 22:21 <thereisnodotcollective@gmail.com> @@@@@@@@@@@@@@@@@@@@@@@@
-
-;; This is a markdown preprocessor engine. It takes markdown as input and extracts
-;; all sorts of useful information from it.
-
+;; @@@@@@ At 2018-10-22 22:41 <thereisnodotcollective@gmail.com> @@@@@@@@@@@@@@@@@@@@@@@@
 (ns
     ^{:doc "Preprocessing pipeline"
       :author "Michael Leahcim"}
-    thereisnodot.marktools.preprocessor
-  
+    thereisnodot.marktools.reducer-extractors
   (:require [net.cgrand.enlive-html :as enlive]
             [thereisnodot.akronim.core :refer [defns]]
             [thereisnodot.marktools.render :as mr]
@@ -121,94 +116,3 @@
           (rest)
           (map clojure.string/trim)))
    lineseq))
-
-
-(defns line-seq->text
-  "Will turn line-seq into text"
-  [(line-seq->text (list "h" "e" "l" "l" "o" ))
-   => "h\ne\nl\nl\no"]
-  [lineseq]
-  (clojure.string/join "\n" lineseq))
-
-(defns markdown-line-seq->html
-  "Will turn lineseq into HTML"
-  [(:html (line-seq->html (list "# Hello" "world" "* Whatever")))
-   => "<h1 id=\"hello\">Hello</h1>\n<p>world</p>\n<ul>\n<li>Whatever</li>\n</ul>"]
-  [lineseq]
-  (mr/text->html (line-seq->text lineseq)))
-
-(defns cut-out-html-from-string
-  "Will take HTML as input. Will output raw text as a result.
-   Will cut out HTML tags with their content"
-  [(cut-out-html-from-string "<div><b>Hello</b></div>world")
-   => "world"]
-  [html-string]
-  (->>
-    html-string java.io.StringReader. enlive/html-resource  first :content first :content
-    (filter string?)
-    (clojure.string/join " ")))
-
-
-(def SKIP-LINE :skip-line)
-(def CLOSED-BUFFER :closed)
-
-(def empty-state
-  {:lines-count 0
-   :lines []
-   :toc []
-   :metadata []
-   :links-to []
-   :raw-text []
-   :preview []
-   :disclaimer []})
-
-(comment
-  (processor-extract-disclaimer empty-state "<!-- @ Copyright (c) Michael Leachim                                                      @ -->"))
-
-(def processing-vector
-  [processor-extract-disclaimer
-   processor-extract-mik-metadata
-   processor-raw-text-extractor
-   processor-video-transform
-   processor-image-transform
-   processor-path-for-transform
-   processor-interlink-transform-and-gather
-   processor-extract-toc
-   processor-extract-separator
-   processor-line-index])
-
-(def indent-headers-vector [processor-headers+1
-                            processor-line-index])
-
-(defn extracted-data->fix-up
-  [app-state]
-  (->
-   app-state
-   (update :metadata butlast)
-   (update :disclaimer butlast)
-   (dissoc :seen-separator?)))
-
-(defn line-seq->extracted-data
-  ([input-seq]
-   (line-seq->extracted-data input-seq processing-vector))
-  ([input-seq processing-vec]
-   (extracted-data->fix-up
-    (let [pfn (apply comp (map #(partial wrap-skip-line %) (reverse processing-vec)))]
-      (reduce
-       (fn [app-state line]
-         (first (pfn [app-state line])))
-       empty-state
-       input-seq)))))
-
-(defn file->extracted-data
-  [file-path]
-  (with-open [rdr (clojure.java.io/reader file-path)]
-    (line-seq->extracted-data (line-seq rdr) processing-vector)))
-
-(defn string->extracted-data
-  [some-string]
-  (line-seq->extracted-data (clojure.string/split some-string #"\n") processing-vector))
-
-(defn line-seq->increment-headers
-  [input-seq]
-  (line-seq->extracted-data input-seq (into []  indent-headers-vector)))
